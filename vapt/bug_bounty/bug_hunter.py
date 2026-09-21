@@ -1,8 +1,8 @@
 """
 Bug Bounty Hunting Engine
 
-Uses Claude AI + YesWeHack data to intelligently hunt for
-high-value, medium-high impact vulnerabilities.
+Uses Claude AI + learned vulnerability patterns to intelligently hunt for
+high-value, medium-high impact vulnerabilities without external queries.
 """
 
 import logging
@@ -10,6 +10,7 @@ import json
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 from datetime import datetime
+from .vulnerability_pattern_learner import VulnerabilityPatternLearner
 
 logger = logging.getLogger(__name__)
 
@@ -20,19 +21,32 @@ class BugHunter:
 
     Combines:
     - Claude AI reasoning
-    - YesWeHack bug bounty data
+    - Self-learned vulnerability patterns (no external queries)
     - Target reconnaissance
     - Intelligent vulnerability prioritization
 
     Focus: Medium-High impact vulnerabilities worth $1000-$5000+
+
+    Uses learned patterns from YesWeHack data that are cached locally,
+    enabling Claude to identify vulnerabilities through reasoning without
+    requiring external API calls on each hunt.
     """
 
-    def __init__(self, client_name: str, target_url: str, claude_client, yeswehack_integration):
+    def __init__(self, client_name: str, target_url: str, claude_client, yeswehack_integration=None):
         """Initialize bug hunter"""
         self.client_name = client_name
         self.target_url = target_url
         self.claude_client = claude_client
         self.yeswehack = yeswehack_integration
+
+        # Initialize pattern learner (loads cached patterns)
+        self.pattern_learner = VulnerabilityPatternLearner()
+
+        # If YesWeHack integration provided and patterns not yet learned, train from it
+        if yeswehack_integration and not self.pattern_learner.patterns:
+            logger.info("First run: Training pattern learner from YesWeHack data...")
+            reports = yeswehack_integration.fetch_recent_reports(limit=50)
+            self.pattern_learner.train_from_reports(reports)
 
         self.assessment_id = f"bug-hunt-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
         self.results_dir = Path(f"assessments/{self.assessment_id}")
@@ -94,37 +108,48 @@ class BugHunter:
         return self._parse_json(response)
 
     async def _generate_hunting_plan(self, tech_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate hunting plan based on technology and bug bounty data"""
-        logger.info("Generating hunting plan...")
+        """Generate hunting plan based on technology and learned vulnerability patterns"""
+        logger.info("Generating hunting plan from learned patterns...")
 
-        # Get relevant bug reports for this tech stack
-        relevant_reports = self.yeswehack.get_testing_checklist(
-            tech_analysis.get("tech_stack", [])
+        tech_stack = tech_analysis.get("tech_stack", [])
+
+        # Get knowledge base from learned patterns (no external queries)
+        pattern_knowledge = self.pattern_learner.get_pattern_knowledge_base()
+
+        # Find relevant vulnerabilities for this tech stack
+        relevant_vulns = self.pattern_learner.identify_similar_vulnerabilities(
+            tech_stack, []  # Will use tech stack matching
         )
+
+        # Build relevant vulnerabilities list from patterns
+        relevant_for_stack = {}
+        for vuln_type, score in relevant_vulns[:15]:
+            if vuln_type in pattern_knowledge:
+                relevant_for_stack[vuln_type] = pattern_knowledge[vuln_type]
 
         prompt = f"""
         Based on this technology stack:
         {json.dumps(tech_analysis, indent=2)}
 
-        And these common vulnerabilities found in bug bounties:
-        {json.dumps(relevant_reports, indent=2)}
+        And these vulnerability patterns learned from real bug bounty reports:
+        {json.dumps(relevant_for_stack, indent=2)}
 
         Create a prioritized hunting plan for {self.target_url}.
 
-        Focus on:
-        1. High-impact vulnerabilities (IDOR, Auth bypass, SQL injection, CORS, etc.)
-        2. Medium-high bounty values ($1000-$5000+)
-        3. Easy to discover but valuable findings
-        4. Quick wins vs long-term investigations
+        Use your knowledge of these patterns to:
+        1. Identify high-impact vulnerabilities likely in this stack
+        2. Prioritize by bounty value vs discovery difficulty (ROI)
+        3. Focus on medium-high impact findings ($1000-$5000+)
+        4. List quick wins first, then complex vulnerabilities
 
         For each target vulnerability:
-        - Why it's likely in this stack
-        - How to discover it
+        - Why it's likely in this tech stack
+        - Specific discovery steps to test
         - Expected impact
         - Estimated bounty
         - Discovery difficulty (1-10)
 
-        Prioritize by: (bounty value) / (discovery difficulty)
+        Score by: (bounty value) / (discovery difficulty)
 
         Response as JSON with ranked list of hunting targets.
         """
@@ -172,26 +197,38 @@ class BugHunter:
         return results
 
     async def _hunt_vulnerability(self, target: Dict[str, Any]) -> Dict[str, Any]:
-        """Hunt for a specific vulnerability"""
+        """Hunt for a specific vulnerability using learned patterns"""
+
+        vuln_name = target.get("vulnerability", "")
+
+        # Get test plan from learned patterns
+        test_plan = self.pattern_learner.generate_test_plan_for_vulnerability(vuln_name)
 
         prompt = f"""
         Hunt for this vulnerability on {self.target_url}:
 
-        Vulnerability: {target.get('vulnerability')}
+        Vulnerability: {vuln_name}
         Type: {target.get('type')}
-        Discovery Method: {target.get('discovery_method')}
         Estimated Bounty: ${target.get('estimated_bounty')}
 
-        Provide:
-        1. Exact steps to discover this vulnerability
-        2. Tools/techniques to use
-        3. Specific parameters to test
-        4. How to verify if vulnerable
-        5. How to demonstrate impact
-        6. Expected payload/response
+        Based on patterns learned from {test_plan.get('confidence', 0):.0%} confidence in this vulnerability type,
+        here's what we know:
 
-        Based on common patterns from bug bounties, what indicators suggest
-        {target.get('vulnerability')} exists in this target?
+        Indicators to look for:
+        {json.dumps(test_plan.get('indicators', [])[:5], indent=2)}
+
+        Common discovery methods:
+        {json.dumps(test_plan.get('discovery_steps', [])[:3], indent=2)}
+
+        Test with these payloads:
+        {json.dumps(test_plan.get('test_payloads', [])[:3], indent=2)}
+
+        Provide:
+        1. Specific steps to test this target
+        2. Exact parameters to fuzz
+        3. Expected indicators if vulnerable
+        4. How to verify the vulnerability
+        5. Impact demonstration steps
 
         Response format:
         {{
@@ -209,16 +246,19 @@ class BugHunter:
         response = self._chat_with_claude(prompt)
         analysis = self._parse_json(response)
 
-        # Simulate verification
-        found = analysis.get("probability", 0) > 0.6
+        # Assess finding likelihood based on Claude's probability and pattern confidence
+        probability = analysis.get("probability", 0)
+        pattern_confidence = test_plan.get("confidence", 0.5)
+        found = (probability * 0.7 + pattern_confidence * 0.3) > 0.6
 
         return {
-            "vulnerability": target.get("vulnerability"),
+            "vulnerability": vuln_name,
             "type": target.get("type"),
             "bounty_estimate": target.get("estimated_bounty"),
             "found": found,
             "analysis": analysis,
-            "timestamp": datetime.now().isoformat()
+            "test_plan": test_plan,
+            "timestamp": datetime.now().isoformat(),
         }
 
     async def _generate_hunting_report(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:

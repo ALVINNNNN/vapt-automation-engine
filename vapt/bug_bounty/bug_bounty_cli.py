@@ -13,14 +13,83 @@ import asyncio
 
 from .yeswehack_integration import YesWeHackIntegration
 from .bug_hunter import BugHunter
+from .vulnerability_pattern_learner import VulnerabilityPatternLearner
 
 logger = logging.getLogger(__name__)
 
 
 @click.group()
 def bug_bounty_commands():
-    """Bug bounty hunting and vulnerability research commands"""
+    """Bug bounty hunting and vulnerability research commands
+
+    The system learns from YesWeHack data once and caches patterns locally.
+    This eliminates the need for external queries during hunting.
+    """
     pass
+
+
+@bug_bounty_commands.command()
+@click.option("--force", is_flag=True, help="Force retraining even if patterns exist")
+def train(force: bool):
+    """Train AI pattern learner from YesWeHack bug bounty data
+
+    This command learns vulnerability patterns once from YesWeHack data
+    and caches them locally. Subsequent hunts use learned patterns without
+    external queries, enabling faster and more efficient hunting.
+
+    Run this once to initialize, or use --force to retrain.
+    """
+    try:
+        click.echo(f"\n{'='*60}")
+        click.echo("TRAINING VULNERABILITY PATTERN LEARNER")
+        click.echo(f"{'='*60}\n")
+
+        learner = VulnerabilityPatternLearner()
+
+        if learner.patterns and not force:
+            click.echo("✓ Patterns already trained and cached locally")
+            summary = learner.get_pattern_summary()
+            click.echo(f"\nLearned Patterns Summary:")
+            click.echo(f"  Patterns: {summary['patterns_learned']}")
+            click.echo(f"  Total Bounty Covered: ${summary['total_bounty_covered']:,.0f}")
+            click.echo(f"  Avg Confidence: {summary['avg_pattern_confidence']:.1%}")
+            click.echo(f"  Training Examples: {summary['total_examples']}")
+            click.echo(f"\nPattern Types:")
+            for ptype in summary['pattern_types']:
+                click.echo(f"  • {ptype}")
+            click.echo("\n✓ No training needed. Use --force to retrain from YesWeHack.")
+            return
+
+        click.echo("Loading bug bounty data from YesWeHack...")
+        yeswehack = YesWeHackIntegration()
+        reports = yeswehack.fetch_recent_reports(limit=50)
+
+        click.echo(f"✓ Loaded {len(reports)} bug reports\n")
+        click.echo("Training pattern learner (this may take a moment)...")
+
+        learner.train_from_reports(reports)
+
+        click.echo(f"\n{'='*60}")
+        click.echo("TRAINING COMPLETE")
+        click.echo(f"{'='*60}\n")
+
+        summary = learner.get_pattern_summary()
+        click.echo(f"Learned Patterns:")
+        click.echo(f"  Total Patterns: {summary['patterns_learned']}")
+        click.echo(f"  Total Bounty Covered: ${summary['total_bounty_covered']:,.0f}")
+        click.echo(f"  Avg Pattern Confidence: {summary['avg_pattern_confidence']:.1%}")
+        click.echo(f"  Training Examples: {summary['total_examples']}")
+
+        click.echo(f"\nVulnerability Patterns Learned:")
+        for ptype in summary['pattern_types']:
+            click.echo(f"  ✓ {ptype}")
+
+        click.echo(f"\n✓ Patterns cached locally. Future hunts will use learned patterns.")
+        click.echo(f"  No external queries needed!")
+
+    except Exception as e:
+        click.echo(f"✗ Error: {e}", err=True)
+        raise click.Abort()
 
 
 @bug_bounty_commands.command()
@@ -28,16 +97,20 @@ def bug_bounty_commands():
 @click.option("--target", required=True, help="Target URL")
 @click.option("--output-dir", type=click.Path(), help="Output directory")
 def hunt(client: str, target: str, output_dir: Optional[str]):
-    """Hunt for bug bounty vulnerabilities using YesWeHack data
+    """Hunt for bug bounty vulnerabilities using learned vulnerability patterns
 
     This command:
-    1. Analyzes target technology stack
-    2. Uses Claude + YesWeHack data to identify high-value bugs
-    3. Prioritizes by bounty potential (ROI)
-    4. Hunts for vulnerabilities systematically
-    5. Generates hunting report with findings
+    1. Uses learned vulnerability patterns (cached locally)
+    2. Analyzes target technology stack
+    3. Uses Claude AI to identify high-value bugs
+    4. Prioritizes by bounty potential (ROI)
+    5. Hunts for vulnerabilities systematically
+    6. Generates hunting report with findings
 
     Focus: Medium-High impact ($1000-$5000+ bounties)
+
+    Note: Patterns are learned once from YesWeHack data. If patterns aren't
+    yet trained, run: vapt bug-bounty train
     """
     try:
         click.echo(f"\n{'='*60}")
@@ -46,21 +119,25 @@ def hunt(client: str, target: str, output_dir: Optional[str]):
         click.echo(f"Target: {target}")
         click.echo(f"Client: {client}")
 
-        # Initialize YesWeHack integration
-        click.echo("\nLoading bug bounty data from YesWeHack...")
-        yeswehack = YesWeHackIntegration()
-        reports = yeswehack.fetch_recent_reports(limit=50)
-        patterns = yeswehack.extract_patterns()
+        # Check if patterns are trained
+        click.echo("\nChecking learned vulnerability patterns...")
+        learner = VulnerabilityPatternLearner()
 
-        click.echo(f"✓ Loaded {len(reports)} bug reports")
-        click.echo(f"✓ Extracted {len(patterns['vulnerability_types'])} vulnerability patterns")
+        if not learner.patterns:
+            click.echo("⚠ No patterns trained yet. Training from YesWeHack data...")
+            yeswehack = YesWeHackIntegration()
+            reports = yeswehack.fetch_recent_reports(limit=50)
+            learner.train_from_reports(reports)
+            click.echo(f"✓ Trained {len(learner.patterns)} vulnerability patterns")
+        else:
+            click.echo(f"✓ Using {len(learner.patterns)} cached vulnerability patterns")
 
-        # Show summary
-        summary = yeswehack.generate_summary()
-        click.echo(f"\nBug Bounty Data Summary:")
-        click.echo(f"  Total Potential Bounty: ${summary['total_potential_bounty']:,}")
-        click.echo(f"  Average Bounty: ${summary['average_bounty']:.0f}")
-        click.echo(f"  High-Impact Findings: {summary['high_impact_findings']}")
+        summary = learner.get_pattern_summary()
+        click.echo(f"✓ Pattern Knowledge Base:")
+        click.echo(f"  - {summary['patterns_learned']} patterns learned")
+        click.echo(f"  - ${summary['total_bounty_covered']:,.0f} total bounty coverage")
+        click.echo(f"  - {summary['avg_pattern_confidence']:.0%} avg confidence")
+
 
         # Initialize Claude client
         click.echo("\nInitializing Claude AI bug hunter...")
@@ -77,9 +154,9 @@ def hunt(client: str, target: str, output_dir: Optional[str]):
 
         # Start hunting
         click.echo(f"\nStarting bug hunt on {target}...")
-        click.echo("(This may take several minutes as Claude analyzes the target)\n")
+        click.echo("(Claude will analyze target and use learned patterns to hunt)\n")
 
-        hunter = BugHunter(client, target, claude_client, yeswehack)
+        hunter = BugHunter(client, target, claude_client)
 
         # Run async hunting
         result = asyncio.run(hunter.start_hunting())
