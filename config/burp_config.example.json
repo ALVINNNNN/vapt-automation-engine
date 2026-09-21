@@ -1,0 +1,31 @@
+{
+  "api_url": "http://localhost:1337",
+  "api_key": "YOUR_BURP_API_KEY_HERE",
+  "timeout": 3600,
+  "session_timeout": 300,
+  "crawl_strategy": "deep",
+  "scan_speed": "fast",
+  "scan_scope": {
+    "include": [
+      "^https://app\\.example\\.com/.*"
+    ],
+    "exclude": [
+      ".*logout.*",
+      ".*signout.*"
+    ]
+  },
+  "active_scanning": {
+    "enabled": true,
+    "thorough": true,
+    "audit_insertion_points": "all"
+  },
+  "issue_filters": {
+    "exclude_info": false,
+    "exclude_false_positives": true,
+    "min_confidence": "firm"
+  },
+  "custom_headers": {
+    "X-Forwarded-For": "127.0.0.1",
+    "Authorization": "Bearer OPTIONAL_TOKEN"
+  }
+}

@@ -1,0 +1,95 @@
+# Quick Scan Profile
+# Duration: 15-30 minutes
+# Scope: Fast assessment with basic coverage
+# Target: Small networks, single applications
+
+name: "Quick Scan"
+description: "Fast security assessment with basic coverage"
+duration_estimate: 900  # 15 minutes
+timeout: 1800  # 30 minutes
+
+# Scan Targets
+targets:
+  # Network targets (CIDR notation)
+  networks: []
+
+  # Individual hosts
+  hosts: []
+
+  # URLs for web application scanning
+  urls: []
+
+  # API endpoints
+  apis: []
+
+# nVAPT Configuration
+nvapt:
+  enabled: true
+
+  nmap:
+    enabled: true
+    # Quick scan: top 1000 ports
+    scan_type: "top-1000"
+    os_detection: false
+    service_version_detection: false
+    timeout: 600
+
+  metasploit:
+    enabled: false
+
+  openvas:
+    enabled: false
+
+# AVAPT Configuration
+avapt:
+  enabled: true
+
+  burp:
+    enabled: false  # Requires manual setup
+
+  owasp_zap:
+    enabled: true
+    spider_depth: 2
+    max_duration: 600
+    quick_scan: true
+
+  sslyze:
+    enabled: true
+    timeout: 300
+
+  nikto:
+    enabled: false
+
+  sqlmap:
+    enabled: false
+
+# Compliance Frameworks (disable to speed up)
+compliance:
+  owasp_top10: true
+  owasp_asvs: false
+  nist_csf: false
+  nist_800_53: false
+  pci_dss: false
+  iso27001: false
+
+# Report Generation
+reporting:
+  formats:
+    - "html"
+
+  include_executive_summary: false
+  include_technical_details: true
+  include_compliance_mapping: false
+  include_raw_findings: true
+
+# Performance Options
+performance:
+  parallel_tools: true
+  max_threads: 4
+  cache_results: true
+
+# Output Options
+output:
+  directory: "./reports/quick_scan"
+  include_timestamp: true
+  compress_archive: false

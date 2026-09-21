@@ -1,0 +1,26 @@
+# VAPT Target List Example
+# One target per line
+# Supports:
+#  - Single IPs: 192.168.1.1
+#  - CIDR ranges: 192.168.0.0/24
+#  - IP ranges: 10.0.0.1-50
+#  - Hostnames: example.com
+#  - FQDNs: mail.example.com
+
+# Internal Network
+192.168.1.0/24
+10.0.0.1-10
+
+# Web Servers
+app.example.com
+api.example.com
+mail.example.com
+
+# VPN Gateway
+vpn.example.com
+
+# DNS Server
+dns.example.com
+
+# File Server
+file.example.com

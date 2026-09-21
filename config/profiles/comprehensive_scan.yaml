@@ -1,0 +1,130 @@
+# Comprehensive Scan Profile
+# Duration: 4+ hours
+# Scope: Full audit with all tools and frameworks
+# Target: Complete security assessment
+
+name: "Comprehensive Scan"
+description: "Complete security audit with all tools and compliance frameworks"
+duration_estimate: 14400  # 4 hours
+timeout: 28800  # 8 hours
+
+# Scan Targets
+targets:
+  # Network targets (CIDR notation)
+  networks: []
+
+  # Individual hosts
+  hosts: []
+
+  # URLs for web application scanning
+  urls: []
+
+  # API endpoints
+  apis: []
+
+# nVAPT Configuration
+nvapt:
+  enabled: true
+
+  nmap:
+    enabled: true
+    # Comprehensive scan: all ports
+    scan_type: "all-ports"
+    os_detection: true
+    service_version_detection: true
+    aggressive: true
+    timeout: 3600
+    enable_scripts: true
+    script_categories:
+      - default
+      - discovery
+      - vuln
+
+  metasploit:
+    enabled: true
+    # Use auxiliary modules for scanning
+    enable_auxilliary: true
+    enable_exploits: false  # For assessment only
+    timeout: 3600
+
+  openvas:
+    enabled: true
+    full_scan: true
+    timeout: 7200
+
+# AVAPT Configuration
+avapt:
+  enabled: true
+
+  burp:
+    enabled: true
+    scan_type: "active"
+    scanner_intensity: "aggressive"
+    timeout: 7200
+
+  owasp_zap:
+    enabled: true
+    spider_depth: 5
+    max_duration: 3600
+    quick_scan: false
+    enable_active_scan: true
+    enable_passive_scan: true
+
+  sslyze:
+    enabled: true
+    timeout: 300
+    full_analysis: true
+
+  nikto:
+    enabled: true
+    timeout: 600
+
+  sqlmap:
+    enabled: true
+    level: 5
+    risk: 3
+    timeout: 1800
+
+# Compliance Frameworks (enable all for comprehensive assessment)
+compliance:
+  owasp_top10: true
+  owasp_asvs: true
+  nist_csf: true
+  nist_800_53: true
+  pci_dss: true
+  iso27001: true
+
+# Report Generation
+reporting:
+  formats:
+    - "html"
+    - "pdf"
+    - "json"
+    - "markdown"
+
+  include_executive_summary: true
+  include_technical_details: true
+  include_compliance_mapping: true
+  include_raw_findings: true
+  include_remediation_guidance: true
+
+# Performance Options
+performance:
+  parallel_tools: true
+  max_threads: 8
+  cache_results: true
+  enable_profiling: true
+
+# Output Options
+output:
+  directory: "./reports/comprehensive_scan"
+  include_timestamp: true
+  compress_archive: true
+  create_comparison_baseline: true
+
+# Post-Scan Options
+post_scan:
+  create_evidence_archive: true
+  send_notifications: true
+  update_vulnerability_database: true
+  retention_policy: 180  # days

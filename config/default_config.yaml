@@ -1,0 +1,221 @@
+# VAPT Automation Engine - Default Configuration
+# This file contains default settings for the application
+# Override with environment-specific configs or environment variables
+
+# Database Configuration
+database:
+  # Database URL (supports SQLite, PostgreSQL, MySQL, etc.)
+  # Examples:
+  # - sqlite:///./vapt.db (local SQLite)
+  # - postgresql://user:password@localhost/vapt (PostgreSQL)
+  url: "sqlite:///./vapt.db"
+
+  # Enable SQL echo for debugging
+  echo: false
+
+  # Connection pool settings
+  pool_size: 20
+  max_overflow: 40
+
+# API Configuration
+api:
+  # API server host
+  host: "0.0.0.0"
+
+  # API server port
+  port: 8000
+
+  # Enable auto-reload on code changes (development only)
+  reload: false
+
+  # Number of worker processes
+  workers: 4
+
+  # Request timeout in seconds
+  timeout: 300
+
+  # CORS allowed origins
+  cors_origins:
+    - "http://localhost"
+    - "http://localhost:3000"
+    - "http://localhost:8000"
+
+  # Enable authentication
+  enable_auth: true
+
+# Scan Configuration
+scan:
+  # Default scan timeout in seconds (1 hour)
+  default_timeout: 3600
+
+  # Maximum concurrent scans
+  max_concurrent_scans: 5
+
+  # Result retention period in days
+  result_retention_days: 90
+
+  # Enable detailed logging
+  detailed_logging: true
+
+# Report Configuration
+report:
+  # Output directory for generated reports
+  output_dir: "./reports"
+
+  # Default report format (html, pdf, json, csv, markdown)
+  default_format: "html"
+
+  # Include raw findings in reports
+  include_raw_findings: true
+
+  # Include compliance framework mapping
+  include_compliance_mapping: true
+
+  # Include executive summary
+  include_executive_summary: true
+
+# Tool Configuration
+tools:
+  # Nmap settings
+  nmap:
+    enabled: true
+    timeout: 3600
+    aggressive: false
+    output_format: "xml"
+
+  # Burp Suite settings
+  burp:
+    enabled: true
+    timeout: 3600
+    api_url: "http://localhost:1337"
+    api_key: "${BURP_API_KEY}"
+
+  # Metasploit settings
+  metasploit:
+    enabled: true
+    timeout: 3600
+    rpc_host: "localhost"
+    rpc_port: 55553
+    rpc_user: "${METASPLOIT_USER}"
+    rpc_pass: "${METASPLOIT_PASS}"
+
+  # sslyze settings
+  sslyze:
+    enabled: true
+    timeout: 300
+
+  # OWASP ZAP settings
+  owasp_zap:
+    enabled: true
+    timeout: 3600
+    api_url: "http://localhost:8080"
+    api_key: "${ZAP_API_KEY}"
+
+# Compliance Framework Configuration
+frameworks:
+  # Enable specific frameworks
+  owasp_top10:
+    enabled: true
+
+  owasp_asvs:
+    enabled: true
+    level: 2  # 1=Basic, 2=Standard, 3=Advanced
+
+  nist_csf:
+    enabled: true
+
+  nist_800_53:
+    enabled: true
+    baseline: "moderate"  # low, moderate, high
+
+  pci_dss:
+    enabled: true
+    version: "3.2.1"
+
+  iso27001:
+    enabled: true
+    year: 2022
+
+  hipaa:
+    enabled: false
+
+# Logging Configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+
+  # Log file path
+  file: "./logs/vapt.log"
+
+  # Max log file size in bytes (10MB)
+  max_size: 10485760
+
+  # Number of backup log files
+  backup_count: 5
+
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Security Configuration
+security:
+  # Enable SSL/TLS
+  enable_ssl: false
+
+  # SSL certificate path
+  ssl_cert_path: "./certs/cert.pem"
+
+  # SSL key path
+  ssl_key_path: "./certs/key.pem"
+
+  # Secret key for JWT
+  secret_key: "${SECRET_KEY}"
+
+  # JWT algorithm
+  jwt_algorithm: "HS256"
+
+  # JWT expiration time in minutes
+  jwt_expiration: 1440
+
+  # Password hashing algorithm
+  password_hash_algorithm: "bcrypt"
+
+# Notifications
+notifications:
+  # Email notifications
+  email:
+    enabled: false
+    smtp_host: "smtp.gmail.com"
+    smtp_port: 587
+    from_email: "${EMAIL_FROM}"
+    from_password: "${EMAIL_PASSWORD}"
+
+  # Webhook notifications
+  webhook:
+    enabled: false
+    url: "${WEBHOOK_URL}"
+    timeout: 10
+
+# Performance
+performance:
+  # Enable caching
+  enable_cache: true
+
+  # Cache timeout in seconds
+  cache_timeout: 3600
+
+  # Database query timeout
+  query_timeout: 30
+
+  # Maximum request size in bytes (100MB)
+  max_request_size: 104857600
+
+# Development Settings
+development:
+  # Enable debug mode
+  debug: false
+
+  # Enable profiling
+  enable_profiling: false
+
+  # Sample data generation
+  generate_sample_data: false

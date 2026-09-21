@@ -1,0 +1,65 @@
+VAPT AUTOMATION ENGINE - LICENSE
+
+Copyright (c) 2026 VAPT Automation Engine Contributors
+
+This software is proprietary and confidential. Unauthorized copying or use
+of this software, in whole or in part, in any form is prohibited.
+
+USAGE RESTRICTIONS:
+===================
+
+This software is licensed for use in authorized penetration testing activities only:
+
+1. AUTHORIZED USES:
+   ✓ Authorized security assessments under written agreement
+   ✓ Security research and education (with proper authorization)
+   ✓ CTF (Capture The Flag) competitions
+   ✓ Internal security testing of systems you own or have permission to test
+
+2. PROHIBITED USES:
+   ✗ Unauthorized testing of systems you don't own
+   ✗ Illegal access or data theft
+   ✗ Creating malware or attack tools for distribution
+   ✗ Testing without written authorization
+   ✗ Commercial use without license
+
+3. LIABILITY:
+   - This software is provided "AS-IS"
+   - Users assume all responsibility for authorized testing
+   - Authors are not liable for unauthorized use or damages
+   - Users must comply with all applicable laws and regulations
+
+4. COMPLIANCE:
+   - Use only in compliance with CFAA (Computer Fraud and Abuse Act)
+   - Ensure all testing is properly authorized in writing
+   - Maintain compliance with client agreements
+   - Respect all applicable privacy and data protection laws
+
+5. ATTRIBUTION:
+   - Include proper attribution in assessment reports
+   - Maintain records of tool usage
+   - Provide evidence of authorization upon request
+
+INSTALLATION AGREEMENT:
+=======================
+
+By installing and using this software, you agree to:
+- Use it only for authorized penetration testing
+- Maintain confidentiality of assessment data
+- Comply with all applicable laws and regulations
+- Accept all liability for your usage
+- Not use it for malicious purposes
+
+INTELLECTUAL PROPERTY:
+======================
+
+All components, code, documentation, and materials are proprietary.
+Modifications for personal use are permitted, but redistribution is not.
+
+For commercial licensing or questions, contact:
+alvinseahsq@gmail.com
+
+---
+
+Last Updated: September 2026
+Version: 1.0.0
