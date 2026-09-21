@@ -1,0 +1,408 @@
+{
+  "Insecure Direct Object References (IDOR)": {
+    "pattern_id": "pattern-insecure-direct-object-references-(idor)",
+    "vulnerability_type": "Insecure Direct Object References (IDOR)",
+    "description": "The /api/users/{id} endpoint does not properly validate authorization, allowing users to access any other user's profile information.",
+    "indicators": [
+      "Unintended access to data",
+      "Insufficient authorization checks"
+    ],
+    "discovery_methods": [
+      "Parameter fuzzing and testing",
+      "Endpoint enumeration",
+      "API documentation analysis"
+    ],
+    "exploitation_techniques": [
+      "Automate to dump all user records",
+      "Observe full user data returned",
+      "Change ID to different value",
+      "Identify user ID parameter in API requests",
+      "Intercept request to /api/users/{id}"
+    ],
+    "technologies": [
+      "express",
+      "mongodb",
+      "node.js"
+    ],
+    "affected_endpoints": [
+      "/api/users/{id}",
+      "/api/{id}",
+      "/user/profile",
+      "/api/profile",
+      "/api/users/",
+      "/users/{id}"
+    ],
+    "payload_examples": [
+      "Increment ID parameter",
+      "Change ID to another user's ID"
+    ],
+    "remediation_steps": [
+      "Implement proper input validation",
+      "Implement server-side authorization checks"
+    ],
+    "average_bounty": 2000.0,
+    "severity_levels": {
+      "high": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771121"
+  },
+  "Authentication Bypass": {
+    "pattern_id": "pattern-authentication-bypass",
+    "vulnerability_type": "Authentication Bypass",
+    "description": "JWT tokens are validated using a weak secret key found in source code, allowing token forgery.",
+    "indicators": [],
+    "discovery_methods": [
+      "Automated scanning"
+    ],
+    "exploitation_techniques": [
+      "Extract JavaScript files from application",
+      "Analyze code for hardcoded secrets",
+      "Use identified secret to forge new tokens with admin role",
+      "Search for JWT library imports and secret usage",
+      "Use jwt.io to decode captured token"
+    ],
+    "technologies": [
+      "flask",
+      "python",
+      "react"
+    ],
+    "affected_endpoints": [
+      "/admin/dashboard",
+      "/admin",
+      "/user/profile",
+      "/users/{id}"
+    ],
+    "payload_examples": [
+      "Increment ID parameter",
+      "Change ID to another user's ID"
+    ],
+    "remediation_steps": [
+      "Implement rate limiting"
+    ],
+    "average_bounty": 3000.0,
+    "severity_levels": {
+      "high": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771173"
+  },
+  "SQL Injection": {
+    "pattern_id": "pattern-sql-injection",
+    "vulnerability_type": "SQL Injection",
+    "description": "User input in search parameter is directly concatenated into SQL query without sanitization.",
+    "indicators": [
+      "Unvalidated user input parameter",
+      "Database interaction errors"
+    ],
+    "discovery_methods": [
+      "Parameter fuzzing and testing"
+    ],
+    "exploitation_techniques": [
+      "Test with SQL injection payload: ' OR '1'='1",
+      "Dump users table with password hashes",
+      "Identify search parameter",
+      "Observe database error revealing SQL structure",
+      "Use UNION-based injection to extract data"
+    ],
+    "technologies": [
+      "php",
+      "mysql"
+    ],
+    "affected_endpoints": [
+      "/user/profile",
+      "/users/{id}"
+    ],
+    "payload_examples": [
+      "'; DROP TABLE users; --",
+      "' OR '1'='1"
+    ],
+    "remediation_steps": [
+      "Implement proper input validation",
+      "Add authorization checks"
+    ],
+    "average_bounty": 5000.0,
+    "severity_levels": {
+      "high": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771195"
+  },
+  "Broken Access Control": {
+    "pattern_id": "pattern-broken-access-control",
+    "vulnerability_type": "Broken Access Control",
+    "description": "Admin panel access is checked only in JavaScript on client-side, not enforced server-side.",
+    "indicators": [
+      "Unintended access to data"
+    ],
+    "discovery_methods": [],
+    "exploitation_techniques": [
+      "Identify admin endpoint: /api/admin/settings",
+      "Modify application settings as regular user",
+      "Access endpoint directly (client-side check doesn't prevent it)",
+      "Intercept network requests as regular user",
+      "Observe admin data returned"
+    ],
+    "technologies": [
+      "django",
+      "vue.js"
+    ],
+    "affected_endpoints": [
+      "/admin/dashboard",
+      "/admin",
+      "/user/profile",
+      "/users/{id}"
+    ],
+    "payload_examples": [
+      "Increment ID parameter",
+      "<img src=x onerror=alert('XSS')>",
+      "javascript:alert('XSS')",
+      "Change ID to another user's ID"
+    ],
+    "remediation_steps": [
+      "Implement proper input validation",
+      "Implement server-side authorization checks"
+    ],
+    "average_bounty": 2500.0,
+    "severity_levels": {
+      "high": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771225"
+  },
+  "Misconfiguration": {
+    "pattern_id": "pattern-misconfiguration",
+    "vulnerability_type": "Misconfiguration",
+    "description": "S3 bucket found in JavaScript is publicly accessible without authentication.",
+    "indicators": [
+      "Unintended access to data",
+      "Database interaction errors"
+    ],
+    "discovery_methods": [
+      "Endpoint enumeration",
+      "Automated scanning"
+    ],
+    "exploitation_techniques": [
+      "Download sensitive files",
+      "Test bucket accessibility: https://bucket.s3.amazonaws.com/",
+      "Extract bucket name from JavaScript code",
+      "Identify database backups and source code",
+      "List bucket contents"
+    ],
+    "technologies": [
+      "aws",
+      "react"
+    ],
+    "affected_endpoints": [
+      "/user/profile",
+      "/users/{id}"
+    ],
+    "payload_examples": [
+      "<img src=x onerror=alert('XSS')>",
+      "javascript:alert('XSS')"
+    ],
+    "remediation_steps": [
+      "Implement proper input validation",
+      "Add authorization checks"
+    ],
+    "average_bounty": 4000.0,
+    "severity_levels": {
+      "high": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771251"
+  },
+  "Brute Force / Rate Limiting Bypass": {
+    "pattern_id": "pattern-brute-force-/-rate-limiting-bypass",
+    "vulnerability_type": "Brute Force / Rate Limiting Bypass",
+    "description": "Login endpoint lacks rate limiting and accepts rapid successive requests.",
+    "indicators": [],
+    "discovery_methods": [
+      "Parameter fuzzing and testing"
+    ],
+    "exploitation_techniques": [
+      "Observe no rate limiting or blocking",
+      "Use password list to brute force accounts",
+      "Send multiple rapid requests with different passwords",
+      "Successfully gain access with weak passwords",
+      "Identify login endpoint: POST /api/auth/login"
+    ],
+    "technologies": [
+      "express",
+      "node.js"
+    ],
+    "affected_endpoints": [
+      "/api/users/{id}",
+      "/api/{id}",
+      "/user/profile",
+      "/api/profile",
+      "/users/{id}"
+    ],
+    "payload_examples": [
+      "Increment ID parameter",
+      "Change ID to another user's ID"
+    ],
+    "remediation_steps": [
+      "Implement rate limiting"
+    ],
+    "average_bounty": 1500.0,
+    "severity_levels": {
+      "medium": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771274"
+  },
+  "Cross-Site Scripting (XSS)": {
+    "pattern_id": "pattern-cross-site-scripting-(xss)",
+    "vulnerability_type": "Cross-Site Scripting (XSS)",
+    "description": "User input reflected in error messages without proper encoding.",
+    "indicators": [
+      "Input reflection in response",
+      "Verbose error messages"
+    ],
+    "discovery_methods": [
+      "Parameter fuzzing and testing"
+    ],
+    "exploitation_techniques": [
+      "Inject payload: <img src=x onerror=alert('XSS')>",
+      "Observe alert execution",
+      "Identify error parameter: ?error=invalid_input",
+      "Craft cookie-stealing payload",
+      "Steal admin session tokens"
+    ],
+    "technologies": [
+      "templates",
+      "express",
+      "ejs"
+    ],
+    "affected_endpoints": [
+      "/user/profile",
+      "/users/{id}"
+    ],
+    "payload_examples": [],
+    "remediation_steps": [
+      "Properly escape/encode output"
+    ],
+    "average_bounty": 1000.0,
+    "severity_levels": {
+      "medium": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771294"
+  },
+  "Information Disclosure": {
+    "pattern_id": "pattern-information-disclosure",
+    "vulnerability_type": "Information Disclosure",
+    "description": "Stack traces and database errors exposed in production error pages.",
+    "indicators": [
+      "Database interaction errors"
+    ],
+    "discovery_methods": [],
+    "exploitation_techniques": [
+      "Use information for targeted attacks",
+      "Identify framework version and vulnerabilities",
+      "Identify database table names and structure",
+      "Observe detailed stack trace",
+      "Cause error by sending invalid data type"
+    ],
+    "technologies": [
+      "postgresql",
+      "django"
+    ],
+    "affected_endpoints": [],
+    "payload_examples": [],
+    "remediation_steps": [
+      "Remove verbose error messages"
+    ],
+    "average_bounty": 800.0,
+    "severity_levels": {
+      "medium": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771312"
+  },
+  "Cross-Origin Resource Sharing (CORS)": {
+    "pattern_id": "pattern-cross-origin-resource-sharing-(cors)",
+    "vulnerability_type": "Cross-Origin Resource Sharing (CORS)",
+    "description": "CORS allows wildcard origin with credentials, enabling cross-origin requests.",
+    "indicators": [],
+    "discovery_methods": [],
+    "exploitation_techniques": [
+      "Create malicious page that makes API requests",
+      "Access user data when they visit malicious page",
+      "Observe: Access-Control-Allow-Origin: *",
+      "Capture API response and check CORS headers",
+      "Observe: Access-Control-Allow-Credentials: true"
+    ],
+    "technologies": [
+      "express",
+      "vue.js"
+    ],
+    "affected_endpoints": [
+      "/user/profile",
+      "/users/{id}"
+    ],
+    "payload_examples": [],
+    "remediation_steps": [
+      "Implement proper input validation",
+      "Add authorization checks"
+    ],
+    "average_bounty": 3000.0,
+    "severity_levels": {
+      "high": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771330"
+  },
+  "Sensitive Data Exposure": {
+    "pattern_id": "pattern-sensitive-data-exposure",
+    "vulnerability_type": "Sensitive Data Exposure",
+    "description": "Third-party API key exposed in JavaScript code.",
+    "indicators": [
+      "Unintended access to data"
+    ],
+    "discovery_methods": [
+      "Automated scanning",
+      "Source code/JavaScript analysis"
+    ],
+    "exploitation_techniques": [
+      "Extract JavaScript bundles",
+      "Retrieve sensitive data or perform unauthorized actions",
+      "Find hardcoded AWS key, Stripe key, etc.",
+      "Search for API patterns: 'api_key=', 'sk-', 'Bearer '",
+      "Use key to access third-party API"
+    ],
+    "technologies": [
+      "react"
+    ],
+    "affected_endpoints": [
+      "/api/users/{id}",
+      "/api/{id}",
+      "/api/profile"
+    ],
+    "payload_examples": [
+      "<img src=x onerror=alert('XSS')>",
+      "javascript:alert('XSS')"
+    ],
+    "remediation_steps": [
+      "Implement proper input validation",
+      "Add authorization checks"
+    ],
+    "average_bounty": 2000.0,
+    "severity_levels": {
+      "high": 1
+    },
+    "confidence_score": 0.1,
+    "examples_count": 1,
+    "learned_at": "2026-09-21T18:43:03.771346"
+  }
+}
